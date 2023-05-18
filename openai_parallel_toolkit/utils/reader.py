@@ -111,6 +111,8 @@ def read_api_base(config_path):
     Returns:
         str: The 'api_base' field from the configuration file.
     """
+    if not config_path:
+        return None
     with open(config_path, 'r') as f:
         config = json.load(f)
     if 'api_base' in config:

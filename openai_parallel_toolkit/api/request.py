@@ -36,7 +36,7 @@ def request_openai_api(openai_model: OpenAIModel, keys=None, config_path=None, m
             break
         except Exception as e:
             # Handle different types of errors
-            if "exceeded your current quota" in str(e):
+            if "exceeded your current quota" in str(e) or "<empty message>" in str(e):
                 # If the quota has been exceeded, remove the key and try again
                 key_manager.remove_key(key)
                 continue

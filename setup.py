@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='openai_parallel_toolkit',
-    version='0.1',
+    version='0.2',
     author='Jellow',
     author_email='dvdx@foxmail.com',
     description='OpenAI-Parallel-Toolkit is a Python library for handling multiple OpenAI API keys and parallel tasks.'
@@ -27,5 +27,6 @@ setup(
         'colorlog',
         'tqdm',
         'tiktoken',
+        'py'
     ]
 )
