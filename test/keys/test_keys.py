@@ -22,6 +22,7 @@ class TestKeys(unittest.TestCase):
             model = Gpt35Turbo(content="", prompt="", temperature=0.7)
             request_openai_api(model, keys=api_keys)
 
+            print(str(context.exception))
             self.assertEqual(str(context.exception), "No OpenAi keys available")
 
     if __name__ == '__main__':

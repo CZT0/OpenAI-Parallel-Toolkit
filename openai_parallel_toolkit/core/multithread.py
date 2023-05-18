@@ -9,8 +9,7 @@ from typing import Type
 from openai_parallel_toolkit.api import APIKeyManager
 from openai_parallel_toolkit.api import request_openai_api, OpenAIModel
 from openai_parallel_toolkit.config import LOG_LABEL
-from openai_parallel_toolkit.utils import ProgressBar
-from openai_parallel_toolkit.utils import partition_data, read_folder
+from openai_parallel_toolkit.utils import ProgressBar, partition_data, read_folder, logger_init
 
 
 def process_data_chunk(data_chunk, output_path, process_output, process_data):
@@ -27,7 +26,7 @@ def process_data_chunk(data_chunk, output_path, process_output, process_data):
         if output_path is not None:
             output_file_without_ext = os.path.join(output_path, key)
             process_output(data, output_file_without_ext)
-            ProgressBar().update()
+            ProgressBar().get_instance().update()
 
 
 def multi_process_one(data: list, openai_model_class: Type[OpenAIModel], threads=multiprocessing.cpu_count() * 5,
@@ -51,13 +50,14 @@ def multi_process_one(data: list, openai_model_class: Type[OpenAIModel], threads
                              data))
         except Exception as e:
             tb = traceback.format_exc()
-            logging.error(f"Error occurred while processing data: {e}\n{tb}")
+            logging.error(f"{LOG_LABEL}Error occurred while processing data: {e}\n{tb}")
             return None
     return results
 
 
 def multi_thread_run(config_path, input_path, file_count, output_path, process_input, process_output, process_data,
                      num_threads=multiprocessing.cpu_count() * 10, name="Progress"):
+    logger_init()
     """Run the processing task using multiple threads.
 
     Args:
@@ -79,7 +79,7 @@ def multi_thread_run(config_path, input_path, file_count, output_path, process_i
                        process_input=process_input)
     if data is None:
         return
-    ProgressBar(total=len(data), desc=name)  # Initialize the progress bar
+    ProgressBar.get_instance(total=len(data), desc=name)  # Initialize the progress bar
     threads = min(len(data), num_threads)  # Determine the number of threads to use
     data_chunks = partition_data(data, threads)  # Partition the data into chunks for each thread
 
@@ -100,4 +100,5 @@ def multi_thread_run(config_path, input_path, file_count, output_path, process_i
             except Exception as e:
                 tb = traceback.format_exc()
                 logging.fatal(f"{LOG_LABEL}Error occurred while processing data: {e}\n{tb}")
-    ProgressBar().close()  # Close the progress bar when all threads are done
+    ProgressBar().get_instance().close()
+    ProgressBar().get_instance().destroy()  # Close the progress bar when all threads are done

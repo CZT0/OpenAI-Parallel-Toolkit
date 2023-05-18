@@ -7,12 +7,14 @@ class ProgressBar:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, total=0, desc="Progress"):
+    @classmethod
+    def get_instance(cls, total=0, desc="Progress"):
         if not cls._instance:
             with cls._lock:
                 if not cls._instance:
-                    cls._instance = super(ProgressBar, cls).__new__(cls)
-                    cls._instance.progress_bar = tqdm(total=total, desc=desc)
+                    obj = super(ProgressBar, cls).__new__(cls)
+                    obj.progress_bar = tqdm(total=total, desc=desc)
+                    cls._instance = obj
         return cls._instance
 
     def update(self, n=1):
@@ -22,3 +24,8 @@ class ProgressBar:
     def close(self):
         with self._lock:
             self.progress_bar.close()
+
+    @classmethod
+    def destroy(cls):
+        with cls._lock:
+            cls._instance = None
