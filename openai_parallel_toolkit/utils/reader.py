@@ -38,7 +38,8 @@ def read_folder(input_path, output_path, process_input, file_count=None):
     skipped_files_count = 0
     if output_path is not None:
         output_files = read_files(output_path)
-        files = [f for f in read_files(input_path) if f not in output_files][:file_count]
+        output_files_basename = [os.path.splitext(f)[0] for f in output_files]
+        files = [f for f in read_files(input_path) if os.path.splitext(f)[0] not in output_files_basename][:file_count]
         skipped_files_count = len(output_files)  # 计算已经跳过的文件数
         logging.info(f"{LOG_LABEL}Output path: {output_path} Skipped files count: {skipped_files_count}")
     else:
