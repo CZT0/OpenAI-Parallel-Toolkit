@@ -99,7 +99,7 @@ def read_keys(config_path):
         config = json.load(f)
         if 'api_keys' in config:
             return config['api_keys']
-        return []
+        raise Exception("No OpenAi keys available")
 
 
 def read_api_base(config_path):
