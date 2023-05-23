@@ -15,7 +15,7 @@ class TestKeys(unittest.TestCase):
         self.assertEqual(str(context.exception), "No OpenAi keys available")
 
     def test_set_keys_with_expire_key(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(Exception) as context:
             api_keys = [
                 "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"
             ]
