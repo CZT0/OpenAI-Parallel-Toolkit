@@ -1,4 +1,6 @@
 import logging
+import random
+import time
 
 import openai
 
@@ -32,6 +34,7 @@ def request_openai_api(openai_model: OpenAIModel, keys=None, config_path=None, m
 
         try:
             # Attempt to generate a completion
+            time.sleep(random.uniform(0, 0.2))  # Sleep for 0-0.2s seconds to avoid infinite requests
             completion = openai_model.generate()
             break
         except Exception as e:
