@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='openai_parallel_toolkit',
-    version='0.2',
+    version='0.4.1',
     author='Jellow',
     author_email='dvdx@foxmail.com',
     description='OpenAI-Parallel-Toolkit is a Python library for handling multiple OpenAI API keys and parallel tasks.'
@@ -16,17 +16,16 @@ setup(
     classifiers=[  # Optional
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     install_requires=[
         'openai',
         'colorlog',
         'tqdm',
         'tiktoken',
-        'py'
+        'regex'
     ]
 )

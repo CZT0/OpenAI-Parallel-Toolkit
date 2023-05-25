@@ -40,7 +40,7 @@ def read_folder(input_path, output_path, process_input, file_count=None):
         output_files = read_files(output_path)
         output_files_basename = [os.path.splitext(f)[0] for f in output_files]
         files = [f for f in read_files(input_path) if os.path.splitext(f)[0] not in output_files_basename][:file_count]
-        skipped_files_count = len(output_files)  # 计算已经跳过的文件数
+        skipped_files_count = len(output_files)
         logging.info(f"{LOG_LABEL}Output path: {output_path} Skipped files count: {skipped_files_count}")
     else:
         files = [
@@ -54,7 +54,7 @@ def read_folder(input_path, output_path, process_input, file_count=None):
     for file in files:
         file_path = os.path.join(input_path, file)
         with open(file_path, 'r') as f:
-            file_name = os.path.splitext(file)[0]  # 获取文件名，不包含后缀
+            file_name = os.path.splitext(file)[0]
             data[file_name] = process_input(f)
     if len(data) == 0:
         if skipped_files_count != 0:

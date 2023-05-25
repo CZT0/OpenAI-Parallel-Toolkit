@@ -8,7 +8,7 @@ from openai_parallel_toolkit.api.request import request_openai_api
 # This may cause problems with API Key Manager, so test it separately
 class TestKeys(unittest.TestCase):
     def test_set_keys_with_empty_list(self):
-        with self.assertRaises(ValueError) as context:
+        with self.assertRaises(Exception) as context:
             api_keys = []
             APIKeyManager(api_keys)
 

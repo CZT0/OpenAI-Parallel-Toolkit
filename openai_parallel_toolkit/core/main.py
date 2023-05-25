@@ -1,8 +1,6 @@
 import multiprocessing  # For accessing the number of CPUs
 from abc import ABC, abstractmethod  # For defining abstract base classes
 
-from py._io.capture import TextIO
-
 from .multithread import multi_thread_run  # Importing the local function for multithreaded execution
 
 
@@ -55,7 +53,7 @@ class ParallelToolkit(ABC):
 
     @staticmethod
     @abstractmethod
-    def process_input(file: TextIO):
+    def process_input(file):
         """
         Abstract method to process an input file.
         This method should read the file and return the file content.

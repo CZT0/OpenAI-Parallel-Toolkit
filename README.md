@@ -5,12 +5,15 @@ effectively supervise parallel tasks. It comes packed with features that cater t
 execution through multithreading, and provides an assortment of utility functions to optimize your OpenAI integration.
 This toolkit serves as an efficient solution for extensive, high-performance OpenAI usage.
 
-### function
+### Function
 
-- [x] Support rotating multiple OpenAI API keys to maximize usage rate
-- [x] Support parallel processing with multiple threads
-- [x] Support resuming file output (skipping duplicate files)
-- [x] Provides the function of splitting long text by token count
+1. &#x2705; Enables automated OpenAI API key rotation when usage limit is reached, with built-in error handling and
+   auto-retry mechanisms.
+2. &#x2705; Provides a method for proxy access to OpenAI services in China.
+3. &#x2705; Supports parallel processing for both API and file operations, optimizing throughput and efficiency.
+4. &#x2705; Features a file processing resumption function, effectively skipping previously processed files.
+5. &#x2705; Includes a utility to split long text into specified length segments, following the token count method used
+   in GPT-3.5 model.
 
 ## Context
 
@@ -128,10 +131,18 @@ You can create a `config.json` file as follows:
 }
 ```
 
-For users in China or other regions where accessing OpenAI is challenging, it is recommended to deploy your own proxy
-and pass in `api_base`. For more details, refer to this
-project: [OpenAI Proxy](https://github.com/justjavac/openai-proxy). I provide a method using Cloudflare's proxy, which
-allows up to 100,000 free calls per day.
+### Troubleshooting: Progress Bar Not Moving
+
+If you're running the program and the progress bar isn't showing any progress, it's possible that you're experiencing
+connectivity issues, particularly if you're in China or another region where accessing OpenAI is challenging.
+
+To resolve this issue, we recommend deploying your own proxy and passing in `api_base`. You can refer to
+the [OpenAI Proxy](https://github.com/justjavac/openai-proxy) project for more details.
+
+This project provides a method that uses Cloudflare's proxy, which allows up to 100,000 free calls per day. This can
+effectively help bypass the connectivity issue and ensure the smooth running of your program.
+
+Remember to replace the project link with the actual URL for your specific situation.
 
 If you don't need the api base field, you can leave it unwritten to the config.json file.
 
@@ -141,22 +152,35 @@ If you have a single file that is too long, you can split it into smaller segmen
 merge the results in order. You can use the `multi_process_one` function for this purpose. Here's an example of how to
 use it in the `process_data` function:
 
+Here's how you can add this information into your markdown documentation:
+
+---
+
+## Usage: Processing Data
+
+In the Python function `multi_process_one`, `data` is a list of tuples. Here's an example:
+
 ```python
 from openai_parallel_toolkit import multi_process_one, Gpt35Turbo
 
 
 @staticmethod
 def process_data(data):
-    # data = [('hello1', 'world'), ('hello2', 'world'), ('hello3', 'world'), ('hello4', 'world'), ('hello5', 'world')]
+    # data example: 
+    # [('hello1', 'world'), ('hello2', 'world'), ('hello3', 'world'), 
+    #  ('hello4', 'world'), ('hello5', 'world')]
     results = multi_process_one(data=data, openai_model_class=Gpt35Turbo, temperature=0.7)
     return results
-
 ```
 
-It is important to note that in the `data` list, you need to pass the prompt as the first element and the content as the
-second element to ensure the correctness of the results. The remaining parameters should be passed in the order of the
-Gpt35Turbo (or your custom model) with the prompt and content parameters. If you are unsure, you can refer to the source
-code of the `multi_process_one` function.
+It's important to note that in the `data` list, you need to pass the prompt as the first element and the content as the
+second element of each tuple. This is necessary to ensure the correctness of the results.
+
+Any remaining parameters should be passed in the order defined by the `Gpt35Turbo` (or your custom model) after the
+prompt and content parameters.
+
+If you're unsure about the parameters, you can refer to the source code of the `multi_process_one` function for
+additional clarity.
 
 ## Customizing OpenAI API Interface
 
