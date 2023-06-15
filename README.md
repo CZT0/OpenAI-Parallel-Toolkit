@@ -5,7 +5,7 @@ effectively supervise parallel tasks. It comes packed with features that cater t
 execution through multithreading, and provides an assortment of utility functions to optimize your OpenAI integration.
 This toolkit serves as an efficient solution for extensive, high-performance OpenAI usage.
 
-### Function
+## Function
 
 1. &#x2705; Enables automated OpenAI API key rotation when usage limit is reached, with built-in error handling and
    auto-retry mechanisms.
@@ -116,7 +116,7 @@ The parameters are explained below:
 
 ## config.json
 
-The `config.json` file contains OpenAI API keys and the `api_base`.
+The `config.json` file contains [OpenAI API keys](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) and the `api_base`.
 
 You can create a `config.json` file as follows:
 
