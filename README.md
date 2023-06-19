@@ -12,8 +12,6 @@ This toolkit serves as an efficient solution for extensive, high-performance Ope
 2. &#x2705; Provides a method for proxy access to OpenAI services in China.
 3. &#x2705; Supports parallel processing for both API and file operations, optimizing throughput and efficiency.
 4. &#x2705; Features a file processing resumption function, effectively skipping previously processed files.
-5. &#x2705; Includes a utility to split long text into specified length segments, following the token count method used
-   in GPT-3.5 model.
 
 ## Context
 
@@ -156,7 +154,7 @@ Here's how you can add this information into your markdown documentation:
 
 ---
 
-## Usage: Processing Data
+## Usage: multi_process_one
 
 In the Python function `multi_process_one`, `data` is a list of tuples. Here's an example:
 
@@ -186,10 +184,16 @@ additional clarity.
 
 Currently, the OpenAI API interfaces supported are:
 
-- GPT-3.5
+- GPT-3.5 Turbo
+- GPT-3.5 16k
+- GPT-3.5 0613
+- GPT-4
 
-This is a low-cost interface suitable for most data processing scenarios. If you want to use other models, you can
-implement the abstract class `OpenAIModel`. For example, you can implement other interfaces similar to the `Gpt35Turbo`
+We provide built-in GPT versions, which include: `Gpt35Turbo`, `Gpt35Turbo16K`, `Gpt35Turbo0613`, and `Gpt4`.
+`Gpt35Turbo0613` is a low-cost interface suitable for most data processing scenarios. If you want to use other models,
+you can
+implement the abstract class `OpenAIModel`. For example, you can implement other interfaces similar to
+the `Gpt35Turbo0613`
 class.
 
 ```python

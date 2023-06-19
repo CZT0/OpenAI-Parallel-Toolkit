@@ -1,6 +1,7 @@
 import unittest
 
-from openai_parallel_toolkit import Gpt35Turbo, request_openai_api, APIKeyManager
+from openai_parallel_toolkit import APIKeyManager, Gpt35Turbo, request_openai_api
+from openai_parallel_toolkit.api.api import Gpt35Turbo0613
 
 
 class TestGPT35(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestGPT35(unittest.TestCase):
         self.assertTrue(len(result) > 0)
 
     def test_request_openai_api(self):
-        model = Gpt35Turbo(content="hello world", prompt="", temperature=0.7)
+        model = Gpt35Turbo0613(content="hello world", prompt="", temperature=0.7)
         result = request_openai_api(openai_model=model, config_path="config.json")
         self.assertTrue(len(result) > 0)
 

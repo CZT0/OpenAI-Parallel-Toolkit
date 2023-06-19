@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name='openai_parallel_toolkit',
@@ -21,11 +21,11 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
     ],
-    install_requires=[
-        'openai',
-        'colorlog',
-        'tqdm',
-        'tiktoken',
-        'regex'
-    ]
+        install_requires=[
+            'openai',
+            'colorlog',
+            'tqdm',
+            'regex'
+        ],
+        python_requires='>=3.8',
 )
