@@ -33,7 +33,8 @@ def read_folder(input_path, output_path, process_input, file_count=None):
         file_count (int, optional): Maximum number of files to process. Processes all if not specified. Default is None.
 
     Returns:
-        dict: A dictionary mapping filenames (without extension) to processed data. Returns None if there's no data to process.
+        dict: A dictionary mapping filenames (without extension) to processed data. Returns None if there's no data
+        to process.
     """
     skipped_files_count = 0
     if output_path is not None:
@@ -47,13 +48,13 @@ def read_folder(input_path, output_path, process_input, file_count=None):
                     f for f in os.listdir(input_path) if
                     os.path.isfile(os.path.join(input_path, f)) and f[0] != "." and not os.path.splitext(f)[
                         0].startswith(
-                        ".")
+                            ".")
                 ][:file_count]
 
     data = {}
     for file in files:
         file_path = os.path.join(input_path, file)
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             file_name = os.path.splitext(file)[0]
             data[file_name] = process_input(f)
     if len(data) == 0:
