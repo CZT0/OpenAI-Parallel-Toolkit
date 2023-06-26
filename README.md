@@ -252,38 +252,6 @@ beneficial for streamlining the management of multiple keys and ensuring uninter
 `request_openai_api` and `multi_process_one` also provides handling of OpenAI request errors, including automatic retry,
 removal of keys that reach the quota, and so on.
 
-## Additional Utility Classes
-
-### Token Count Calculation
-
-The `num_tokens_from_string` function is provided to calculate the number of tokens in a string, using the default
-behavior of GPT-3.5. It can be used as follows:
-
-```python
-from openai_parallel_toolkit import num_tokens_from_string
-
-print(num_tokens_from_string("hello world"))
-```
-
-### Splitting Text by Token Length
-
-The `split_string_by_tokens` function allows you to split a long text into segments of a specified token length and
-store them in a list. It can be used as follows:
-
-```python
-from openai_parallel_toolkit import split_string_by_tokens
-
-results = split_string_by_tokens(string="hello world", thunk_len=2, split_signal="。")
-```
-
-The parameters for `split_string_by_tokens` are as follows:
-
-- `string (str)`: The text to be segmented.
-- `thunk_len (int)`: The length of each segment in tokens.
-- `split_signal (str)`: The delimiter used for splitting.
-  It's important to note that if a sentence within a segment is too long, the segment may exceed the specified length.
-  This function does not truncate the text, but only splits it when encountering the split signal.
-
 ## Contributing
 
 We truly appreciate and value contributions from the community, as they play a significant role in enhancing the
