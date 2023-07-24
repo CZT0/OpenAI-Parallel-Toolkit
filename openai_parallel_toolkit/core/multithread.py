@@ -6,10 +6,9 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor
 from typing import Type
 
-from openai_parallel_toolkit.api import APIKeyManager
-from openai_parallel_toolkit.api import request_openai_api, OpenAIModel
+from openai_parallel_toolkit.api import APIKeyManager, OpenAIModel, request_openai_api
 from openai_parallel_toolkit.config import LOG_LABEL
-from openai_parallel_toolkit.utils import ProgressBar, partition_data, read_folder, logger_init
+from openai_parallel_toolkit.utils import ProgressBar, logger_init, partition_data, read_folder
 
 
 def process_data_chunk(data_chunk, output_path, process_output, process_data):
@@ -42,6 +41,7 @@ def multi_process_one(data: list, openai_model_class: Type[OpenAIModel], threads
     Returns:
         list: The results from the OpenAI API.
     """
+    logger_init()
     with ThreadPoolExecutor(max_workers=threads) as executor:
         try:
             results = list(
@@ -57,7 +57,6 @@ def multi_process_one(data: list, openai_model_class: Type[OpenAIModel], threads
 
 def multi_thread_run(config_path, input_path, file_count, output_path, process_input, process_output, process_data,
                      num_threads=multiprocessing.cpu_count() * 10, name="Progress"):
-    logger_init()
     """Run the processing task using multiple threads.
 
     Args:
@@ -71,6 +70,7 @@ def multi_thread_run(config_path, input_path, file_count, output_path, process_i
         num_threads (int, optional): The number of threads to use. Defaults to 10 times the number of CPUs.
         name (str, optional): The name of the progress bar. Defaults to "Progress".
     """
+    logger_init()
     APIKeyManager(config_path=config_path)
     if output_path is not None:
         if not os.path.exists(output_path):
