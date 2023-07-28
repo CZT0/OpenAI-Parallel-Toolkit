@@ -33,43 +33,19 @@ pip install openai-parallel-toolkit
 输入文件 `input.jsonl` 格式例子：
 
 ```json lines
-{
-  "index": 0,
-  "instruction": "把这句话翻译成英文",
-  "input": "今天天气真好"
-}
-{
-  "index": 1,
-  "instruction": "写一句话",
-  "input": ""
-}
-{
-  "index": 2,
-  "instruction": "把这句话翻译成英文",
-  "input": "你多大了"
-}
-{
-  "index": 3,
-  "instruction": "写一个笑话",
-  "input": ""
-}
+{"index": 0, "instruction": "把这句话翻译成英文", "input": "今天天气真好"}
+{"index": 1, "instruction": "写一句话", "input": ""}
+{"index": 2, "instruction": "把这句话翻译成英文", "input": "你多大了"}
+{"index": 3, "instruction": "写一个笑话", "input": ""}
 ```
 
 输出文件 `output.jsonl` 格式例子：
 
 ```json lines
-{
-  "0": "The weather is really nice today."
-}
-{
-  "1": "我正在尽力思考如何回答你的问题。"
-}
-{
-  "2": "How old are you?"
-}
-{
-  "3": "为什么把牛拉到教堂？\n\n因为它是“牧师”啊！"
-}
+{"0": "The weather is really nice today."}
+{"1": "我正在尽力思考如何回答你的问题。"}
+{"2": "How old are you?"}
+{"3": "为什么小明总是躲在树后笑？\n\n因为他是一个木头人！"}
 ```
 
 处理数据集的 Python 代码：
