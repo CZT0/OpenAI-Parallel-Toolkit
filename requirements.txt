@@ -1,0 +1,4 @@
+openai~=0.27.8
+tqdm~=4.65.0
+colorlog~=5.0.1
+setuptools~=67.8.0
