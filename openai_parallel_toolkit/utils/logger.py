@@ -2,7 +2,14 @@ import logging
 
 from colorlog import ColoredFormatter
 
-from openai_parallel_toolkit.config import LOG_LABEL
+LOG_LABEL = "MYLOG"
+LOG_COLORS = {
+    'DEBUG': 'cyan',
+    'INFO': 'green',
+    'WARNING': 'yellow',
+    'ERROR': 'red',
+    'CRITICAL': 'red',
+}
 
 
 class LogFilter(logging.Filter):
@@ -18,41 +25,33 @@ class LogFilter(logging.Filter):
             return False
 
 
-# 创建一个全局变量用于保存logger
-_global_logger = None
+class Logger:
+    def __init__(self, label=LOG_LABEL, level=logging.WARNING, datefmt=None):
+        self.label = label
+        self.level = level
+        self.datefmt = datefmt
+        self.logger = self.create_logger()
+        self.handler = self.create_handler()
+        self.formatter = self.create_formatter()
 
+        self.handler.setFormatter(self.formatter)
+        self.logger.addHandler(self.handler)
 
-def logger_init(label=LOG_LABEL, level=logging.INFO, datefmt=None):
-    global _global_logger
+    def create_logger(self):
+        logger = logging.getLogger()
+        logger.setLevel(self.level)
+        return logger
 
-    # 检查全局变量是否已经被初始化
-    if _global_logger is not None:
-        return _global_logger
+    def create_handler(self):
+        handler = logging.StreamHandler()
+        handler.addFilter(LogFilter(self.label))
+        return handler
 
-    logger = logging.getLogger()
-    logger.setLevel(level)
-    handler = logging.StreamHandler()
-
-    log_colors = {
-        'DEBUG': 'cyan',
-        'INFO': 'green',
-        'WARNING': 'yellow',
-        'ERROR': 'red',
-        'CRITICAL': 'red',
-    }
-
-    handler.addFilter(LogFilter(label))
-
-    formatter = ColoredFormatter(
-            "%(log_color)s%(asctime)s - %(levelname)s - %(message)s",
-            datefmt=datefmt,
-            reset=True,
-            log_colors=log_colors
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    # 将新创建的logger保存在全局变量中，以便后续使用
-    _global_logger = logger
-
-    return logger
+    def create_formatter(self):
+        formatter = ColoredFormatter(
+                "%(log_color)s%(asctime)s - %(levelname)s - %(message)s",
+                datefmt=self.datefmt,
+                reset=True,
+                log_colors=LOG_COLORS
+        )
+        return formatter

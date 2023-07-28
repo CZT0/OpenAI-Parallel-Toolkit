@@ -1,0 +1,20 @@
+{
+  "index": 0,
+  "instruction": "把这句话翻译成英文",
+  "input": "今天天气真好"
+}
+{
+  "index": 1,
+  "instruction": "写一句话",
+  "input": ""
+}
+{
+  "index": 2,
+  "instruction": "把这句话翻译成英文",
+  "input": "你多大了"
+}
+{
+  "index": 3,
+  "instruction": "写一个笑话",
+  "input": ""
+}

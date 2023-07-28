@@ -1,131 +1,99 @@
-# Import the necessary libraries
-import array
-import datetime
 import logging
 import random
 import threading
 import time
 
 import openai
+from cachetools import TTLCache
 
-from openai_parallel_toolkit.config import LOG_LABEL
-from openai_parallel_toolkit.utils import read_keys, read_api_base
-# Import related local modules
-from .api import OpenAIModel
+from openai_parallel_toolkit.utils.logger import LOG_LABEL
+from openai_parallel_toolkit.utils.reader import read_config
 
 
-class APIKeyManager:
-    """
-    Class to manage the API keys of OpenAI. Implements the Singleton pattern.
-    """
-    _instance = None  # Singleton instance variable
+class KeyManager:
 
-    def __new__(cls, api_keys: array = None, config_path: str = None, set_api_base: bool = True):
-        """
-        Overload the __new__ method to create a singleton instance.
-        If the instance doesn't exist, create it. If it does, return the existing instance.
-        """
-        if not cls._instance:
-            if not api_keys:
-                if config_path:
-                    api_keys = read_keys(config_path)
-                else:
-                    raise Exception("No OpenAi keys available")
-            if set_api_base:
-                api_base = read_api_base(config_path)
-                if api_base:
-                    openai.api_base = api_base
-            cls._instance = super().__new__(cls)
-            cls._instance.__init_once(api_keys)
-        cls.check_key_available(cls._instance)
-        return cls._instance
-
-    def __init_once(self, api_keys):
+    def __init__(self, config_path: str = None):
         """
         Initialize the instance.
         """
-        self._api_keys = api_keys  # Store the keys
-        self._key_lock = threading.Lock()  # Lock to manage concurrent access to keys
-        self._key_failure_times = {key: None for key in api_keys}  # Record the failure time of each key
-        self._key_status_lock = threading.Lock()  # Lock to manage concurrent access to key status
-        self._key_status = {key: True for key in api_keys}  # The initial status of each key is True (available)
-        openai.api_key = self.get_key  # Set the OpenAI API key to the first key in the list
+        if not config_path:
+            raise Exception("No OpenAI keys available")
 
-    @property
-    def get_key(self):
+        api_keys, api_base = read_config(config_path)
+        openai.api_base = api_base
+        self.keys = set(api_keys)  # All keys
+        self.using_keys = set()  # Keys that have been used
+        self.limited_keys = TTLCache(maxsize=len(self.keys),
+                                     ttl=30)  # Keys that have reached the request limit
+        self.using_keys_lock = threading.Lock()  # Lock for keys and using_keys
+        # self.limited_keys_lock = threading.Lock()  # Separate using_keys_lock for limited_keys
+
+    def get_new_key(self, key=None) -> str:
         """
-        Getter for the keys, which shuffles the keys and returns the first one.
+        Get a new key. The key is one that is in keys but not in using_keys or limited_keys.
         """
-        self.check_key_available()
-        random.shuffle(self._api_keys)
-        return self._api_keys[0]
+        min_ttl = None
+        min_key = None
+        with self.using_keys_lock:
+            logging.info(f"{LOG_LABEL} {key} get lock ")
+            self.limited_keys.expire()
+            unused_keys = self.keys - self.using_keys - set(self.limited_keys.keys())
+            logging.info(f"{LOG_LABEL}unused_keys {len(unused_keys)}")
+            if key:
+                logging.info(f"{LOG_LABEL}locked {key}")
+                self.limited_keys[key] = time.time()
+                self.using_keys.discard(key)
+            if unused_keys:
+                new_key = random.choice(list(unused_keys))
+                self.using_keys.add(new_key)
+                return new_key
+            else:
+                logging.info(f"{LOG_LABEL}keys {len(self.keys)}")
+                logging.info(f"{LOG_LABEL}using_keys {len(self.using_keys)}")
+                logging.info(f"{LOG_LABEL}limited_keys {len(self.limited_keys.keys())}")
+                if len(self.keys) == 0:
+                    raise Exception("No OpenAI keys available,All keys have expired")
+                else:
+                    min_key, min_ttl = self.get_min_ttl_key()
+                    if min_ttl:
+                        logging.info(f"{LOG_LABEL}min_ttl {min_ttl}, min_key {min_key}")
+                        self.limited_keys.pop(min_key)
+                        self.using_keys.add(min_key)
+            logging.info(f"{LOG_LABEL} {key}  leave lock ")
+
+        if min_ttl:
+            time.sleep(min_ttl)
+            return min_key
+        else:
+            time.sleep(random.randint(1, 5))
+            return self.get_new_key()
+
+    def release_key(self, key):
+        """
+        Release a key. The key is removed from using_keys.
+        """
+        self.using_keys.discard(key)
 
     def remove_key(self, key):
         """
-        Remove a key from the list.
+        Remove a key. The key is removed from keys.
         """
-        with self._key_lock:
-            if key in self._api_keys:
-                self._api_keys.remove(key)
-                self._key_failure_times.pop(key)
-                self._key_status.pop(key)
-                logging.warning(f"{LOG_LABEL}Removed key: {key}")
-                openai.api_key = self.get_key
-                logging.info(f"{LOG_LABEL}Switched to key: {openai.api_key}")
+        with self.using_keys_lock:
+            self.keys.discard(key)
+            self.using_keys.discard(key)
+            self.limited_keys.pop(key)
+        logging.warning(f"{LOG_LABEL}remove_key {key}")
 
-    def check_key_available(self):
-        """
-        Check if there is at least one key available.
-        """
-        if len(self._api_keys) == 0:
-            logging.error(
-                f"{LOG_LABEL} No OpenAI keys available. Please terminate the program and add keys to the config file.")
-            raise Exception("No OpenAi keys available")
+    def get_key_length(self):
+        return len(self.keys)
 
-    def switch_api_key(self, openai_model: OpenAIModel):
-        """Function to switch the API key, which is called when a rate limit error is encountered"""
-        with self._key_status_lock:
-            self._key_status[openai.api_key] = False
-        with self._key_lock:
-            if self._key_status[openai.api_key]:
-                return None
-            try:
-                # Try generating a completion with the current key
-                completion = openai_model.generate()
-                return completion
-            except Exception as e:
-                # If a rate limit error occurs
-                if "Rate limit" in str(e):
-                    logging.info(f"{LOG_LABEL}Rate limit error encountered")
-                    # Record the failure time of the current key
-                    self._key_failure_times[openai.api_key] = datetime.datetime.now()
-                    # Find a key that hasn't failed yet
-                    for key, value in self._key_failure_times.items():
-                        if value is None:
-                            logging.info(f"{LOG_LABEL}Switched to key: {key}")
-                            openai.api_key = key
-                            return None
-                    # Find keys that have been idle for at least 60 seconds
-                    available_keys = [key for key, value in self._key_failure_times.items()
-                                      if (datetime.datetime.now() - value).total_seconds() >= 60]
-                    if available_keys:
-                        # Switch to the first available key
-                        openai.api_key = available_keys[0]
-                        logging.info(f"{LOG_LABEL}Switched to key: {openai.api_key}")
-                    else:
-                        # If no keys are available, find the one that will be available soonest
-                        min_key, min_value = min(self._key_failure_times.items(), key=lambda item: item[1])
-                        next_time = min_value + datetime.timedelta(seconds=60)
-                        # Wait until the next key becomes available
-                        time_to_wait = (next_time - datetime.datetime.now()).total_seconds()
-                        logging.info(
-                            f"{LOG_LABEL}Waiting for key: {min_key} to become available in {time_to_wait} seconds")
-                        time.sleep(time_to_wait)
-                        logging.info(f"{LOG_LABEL}Switched to key: {min_key}")
-                        openai.api_key = min_key
-                else:
-                    return None
-            finally:
-                # Mark the key as available
-                with self._key_status_lock:
-                    self._key_status[openai.api_key] = True
+    def get_min_ttl_key(self):
+        if not self.limited_keys:
+            return None, None
+        now = time.time()
+        # Get the remaining TTL for each key and put them in a list
+        valid_keys = [(self.limited_keys[key] + self.limited_keys.ttl - now, key)
+                      for key in self.limited_keys if self.limited_keys[key] + self.limited_keys.ttl - now > 0]
+
+        min_ttl_key = min(valid_keys)
+        return min_ttl_key[1], min_ttl_key[0],

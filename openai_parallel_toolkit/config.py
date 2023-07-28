@@ -1,1 +1,0 @@
-LOG_LABEL = "MYLOG"

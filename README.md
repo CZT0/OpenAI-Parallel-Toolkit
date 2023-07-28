@@ -1,43 +1,22 @@
 # OpenAI Parallel Toolkit
 
-The OpenAI Parallel Toolkit is a specialized Python library crafted to proficiently manage multiple OpenAI API keys and
-effectively supervise parallel tasks. It comes packed with features that cater to API key rotation, accelerating task
-execution through multithreading, and provides an assortment of utility functions to optimize your OpenAI integration.
-This toolkit serves as an efficient solution for extensive, high-performance OpenAI usage.
+**English** | [中文](README_CN.md)
 
-## Function
+This project uses the key of the OpenAI $5 account. By purchasing a large number of $5 keys and combining key management
+with multithreaded parallel processing of large amounts of data, it bypasses the restriction of the $5 account that can
+only request 3 times per minute.
 
-1. &#x2705; Enables automated OpenAI API key rotation when usage limit is reached, with built-in error handling and
-   auto-retry mechanisms.
-2. &#x2705; Provides a method for proxy access to OpenAI services in China.
-3. &#x2705; Supports parallel processing for both API and file operations, optimizing throughput and efficiency.
-4. &#x2705; Features a file processing resumption function, effectively skipping previously processed files.
+The speed of parallel processing is the number of keys/20, that is, the speed of 20 keys is 1 it/s, the speed of 40 keys
+is 2 it/s, and so on.
+Note that each account can only make 200 requests per day.
 
-## Context
+## Features
 
-In the field of natural language processing (NLP), Generative Pretrained Transformer (GPT) models have revolutionized
-the methodology of processing and comprehending textual data. They've equipped us with the ability to accomplish a vast
-array of tasks such as data annotation, processing, and generating text with a human-like semblance. However, employing
-GPT models for large-scale or time-critical tasks can often present unique hurdles.
-
-A primary concern is the execution speed of tasks. Owing to the intricate and data-intensive nature of GPT models,
-processing time can be substantial, particularly when confronted with significant data quantities. This can
-substantially impede the efficiency of projects that require rapid completion.
-
-The utilization of API keys presents another challenge. Each key has a defined limit, beyond which it is incapable of
-handling more requests. In scenarios involving high data volumes, this limit can swiftly be reached, thereby
-necessitating a manual transition to another key. This challenge intensifies when handling multiple keys across diverse
-projects.
-
-In an attempt to address these challenges and optimize the process, we developed a comprehensive solution: the OpenAI
-Parallel Toolkit. This advanced framework is designed to efficiently manage multiple OpenAI API keys and effectively
-supervise parallel tasks. The toolkit incorporates a range of features, including API key rotation, multithreading for
-expedited task execution, file processing with resume capability, and an array of utility functions to enhance OpenAI
-integration.
-
-The OpenAI Parallel Toolkit's primary goal is to enable users to focus on the task's core aspects, eliminating the need
-to continuously navigate peripheral challenges. It offers a streamlined and efficient solution for large-scale OpenAI
-usage, empowering you to concentrate on your data processing needs.
+1. ✅ When the usage reaches the limit, it can automatically rotate the OpenAI API key, with built-in error handling and
+   automatic retry mechanism.
+2. ✅ Provides a solution for proxy access to OpenAI services in China.
+3. ✅ Supports parallel processing of API and file operations, optimizes throughput and efficiency, and supports
+   resumable transmission.
 
 ## Installation
 
@@ -47,90 +26,133 @@ pip install openai-parallel-toolkit
 
 ## Usage
 
-You are expected to override the `process_input`, `process_output`, and `process_data` methods of the `ParallelToolkit`
-class. You only need to consider the processing workflow for a single file.
+Currently provide three usage methods:
 
-Specifically, the `process_input` method should handle how the file is read, the `process_data` method should handle the
-processing of data within the file (you can call OpenAI API within this function), and the `process_output` method
-should handle how the processed data is written back to a file.
+1. Parallel processing of a dataset, support for continuing to run after interruption.
+2. Process multiple data simultaneously in the code.
+3. Process a single data in the code.
 
-Once these methods are implemented, the `run` method can be invoked. Here's an example of a `ParallelToolkit` subclass
-that demonstrates the implementation of these methods:
+### 1. Dataset parallel processing
 
-```python
-import json
-from openai_parallel_toolkit import ParallelToolkit, Gpt35Turbo, request_openai_api
+The input and output of data are all in jsonl format.
 
+Input file `input.jsonl` format example:
 
-class MyParallelToolkit(ParallelToolkit):
-
-    @staticmethod
-    def process_input(file):
-        # Read the file, the returned data will be the input for process_data
-        return json.load(file)
-
-    @staticmethod
-    def process_data(data):
-        # Call OpenAI API here, several call methods are provided for reference
-        # For example, to use GPT-3.5, you can make the call as follows:
-        model = Gpt35Turbo(content="hello world", prompt="", temperature=0.7)
-        result = request_openai_api(model)
-        return result
-
-    @staticmethod
-    def process_output(data, output_file_without_ext):
-        # Process the result returned by process_data and write the result to a file
-        output_file = output_file_without_ext + ".json"
-        with open(output_file, 'w', encoding='utf-8') as file:
-            json.dump({"result": data}, file, ensure_ascii=False)
+```json lines
+{
+  "index": 0,
+  "instruction": "Translate this sentence into English",
+  "input": "Today the weather is really good"
+}
+{
+  "index": 1,
+  "instruction": "Write a sentence",
+  "input": ""
+}
+{
+  "index": 2,
+  "instruction": "Translate this sentence into English",
+  "input": "How old are you"
+}
+{
+  "index": 3,
+  "instruction": "Write a joke",
+  "input": ""
+}
 ```
 
-Afterwards, you can invoke it as follows:
+Output file `output.jsonl` format example:
 
-```python
-MyParallelToolkit(
-    config_path="/path/to/config.json",
-    input_path="/path/to/input/folder",
-    output_path="/path/to/output/folder").run()
+```json lines
+{
+  "0": "The weather is really nice today."
+}
+{
+  "1": "I am trying hard to think about how to answer your question."
+}
+{
+  "2": "How old are you?"
+}
+{
+  "3": "Why pull the cow to the church? \n\n Because it is a “pastor”!"
+}
 ```
 
-Support for resuming file output means that if the output file already exists, the processing for that file will be
-skipped. You can run the program multiple times until all files have been processed. Usually, a single run should be
-sufficient to process all the files.
-The parameters are explained below:
+Python code for processing datasets:
 
-- `config_path (str)`: Path to the configuration file.
-    - Example: `"/path/to/config.json"`
-- `input_path (str)`: Path to the input file or directory.
-    - Example: `"/path/to/input/"`
-- `output_path (str)`: Path to the output file or directory.
-    - Example: `"/path/to/output/"`
-- `file_count (int, optional)`: Number of files to process.
-    - Defaults to None, which means process all files.
-- `num_threads (int, optional)`: Number of worker threads.
-    - Defaults to 10 times the number of CPUs.
-- `name (str, optional)`: Name to display for the progress.
-    - Defaults to "ParallelToolkit Progress".
+```python
+from openai
 
-## config.json
+-parallel - toolkit
+import ParallelToolkit
 
-The `config.json` file contains [OpenAI API keys](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) and the `api_base`.
+if __name__ == '__main__':
+    ParallelToolkit(config_path="config.json",
+                    input_path="input.jsonl",
+                    output_path="output.jsonl").run()
+```
 
-You can create a `config.json` file as follows:
+`ParallelToolkit` parameters:
+
+- `config_path`: Configuration file path.
+- `input_path`: Input file path.
+- `output_path`: Output file path.
+- `max_retries`: Maximum number of retries, default is 5.
+- `threads`: Number of threads, default is 20, the final number of threads will take the minimum value of half the
+  number of keys and the number of datasets.
+- `name`: Progress bar name, default is "ParallelToolkit Progress".
+- `openai_model`: Default is gpt-3.5-turbo-0613, note that the $5 account cannot use gpt-4.
+
+### 2. Process multiple data simultaneously in the code
+
+Use the `Prompt` named tuple to construct a `Dict` and then pass it into the `parallel_api` method.
+
+```python
+from openai_parallel_toolkit import ParallelToolkit, Prompt
+
+if __name__ == '__main__':
+    data = {i: Prompt(instruction="Please write a sentence about the following topic: ", input="china") for i in
+            range(10)}
+    ans = ParallelToolkit(config_path="config.json").parallel_api(data=data)
+    print(ans)
+```
+
+### 3. Process a single data in the code
+
+```python
+from openai_parallel_toolkit import ParallelToolkit, Prompt
+
+if __name__ == '__main__':
+    prompt = Prompt(instruction="Please write a sentence about the following topic: ", input="flowers")
+    ans = ParallelToolkit(config_path="config.json").api(prompt=prompt)
+    print(ans)
+```
+
+## `config.json`
+
+The `config.json` file contains
+the [OpenAI API key ↗](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) and `api_base`.
+
+You can create the `config.json` file as follows:
 
 ```json
 {
   "api_keys": [
-    "your api key 1",
-    "your api key 2",
-    "your api key 3"
+    "Your api key 1",
+    "Your api key 2",
+    "Your api key 3"
   ],
-  "api_base": "https://api.openai.com/v1"
+  "api_base": "Your api_base"
 }
 ```
 
-### Troubleshooting: Progress Bar Not Moving
+In this JSON, `api_keys` is an array that contains your OpenAI API keys. Please
+replace `"Your api key 1"`, `"Your api key 2"`, `"Your api key 3"` with your actual API keys. If you only have one API
+key, then this array only needs to contain one element.
 
+`"api_base"` is the basic URL you use to# OpenAI Parallel Toolkit
+
+## China Access to OpenAI Service Agent
 If you're running the program and the progress bar isn't showing any progress, it's possible that you're experiencing
 connectivity issues, particularly if you're in China or another region where accessing OpenAI is challenging.
 
@@ -143,140 +165,3 @@ effectively help bypass the connectivity issue and ensure the smooth running of 
 Remember to replace the project link with the actual URL for your specific situation.
 
 If you don't need the api base field, you can leave it unwritten to the config.json file.
-
-## Parallel processing of one file
-
-If you have a single file that is too long, you can split it into smaller segments, process them in parallel, and then
-merge the results in order. You can use the `multi_process_one` function for this purpose. Here's an example of how to
-use it in the `process_data` function:
-
-Here's how you can add this information into your markdown documentation:
-
----
-
-## Usage: multi_process_one
-
-In the Python function `multi_process_one`, `data` is a list of tuples. Here's an example:
-
-```python
-from openai_parallel_toolkit import multi_process_one, Gpt35Turbo
-
-
-@staticmethod
-def process_data(data):
-    # data example: 
-    # [('hello1', 'world'), ('hello2', 'world'), ('hello3', 'world'), 
-    #  ('hello4', 'world'), ('hello5', 'world')]
-    results = multi_process_one(data=data, openai_model_class=Gpt35Turbo, temperature=0.7)
-    return results
-```
-
-It's important to note that in the `data` list, you need to pass the prompt as the first element and the content as the
-second element of each tuple. This is necessary to ensure the correctness of the results.
-
-Any remaining parameters should be passed in the order defined by the `Gpt35Turbo` (or your custom model) after the
-prompt and content parameters.
-
-If you're unsure about the parameters, you can refer to the source code of the `multi_process_one` function for
-additional clarity.
-
-## Customizing OpenAI API Interface
-
-Currently, the OpenAI API interfaces supported are:
-
-- GPT-3.5 Turbo
-- GPT-3.5 16k
-- GPT-3.5 0613
-- GPT-4
-
-We provide built-in GPT versions, which include: `Gpt35Turbo`, `Gpt35Turbo16K`, `Gpt35Turbo0613`, and `Gpt4`.
-`Gpt35Turbo0613` is a low-cost interface suitable for most data processing scenarios. If you want to use other models,
-you can
-implement the abstract class `OpenAIModel`. For example, you can implement other interfaces similar to
-the `Gpt35Turbo0613`
-class.
-
-```python
-from openai_parallel_toolkit import OpenAIModel
-import openai
-
-
-class Gpt35Turbo(OpenAIModel):
-
-    def __init__(self, content, prompt, temperature):
-        self.content = content
-        self.prompt = prompt
-        self.temperature = temperature
-
-    def generate(self):
-        # Create a chat completion with OpenAI
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": self.prompt},
-                {"role": "user", "content": self.content}
-            ],
-            temperature=self.temperature
-        )
-        return completion
-```
-
-## Simple use OpenAI API request Only
-
-If you just want to simply call the api. You can use the API key rotation with just two lines of code:
-
-```python
-from openai_parallel_toolkit import Gpt35Turbo, request_openai_api
-
-model = Gpt35Turbo(content="hello world", prompt="", temperature=0.7)
-result = request_openai_api(openai_model=model, config_path="config.json")
-```
-
-`multi_process_one` provides multi-thread processing for an array of data. It internally wraps
-the `request_openai_api` function. If you want to use `multi_process_one` independently, you can do so as follows:
-
-```python
-from openai_parallel_toolkit import multi_process_one, Gpt35Turbo, APIKeyManager
-
-
-def test_multi_process_one():
-    data = [('hello1', 'world'), ('hello2', 'world'), ('hello3', 'world'), ('hello4', 'world'), ('hello5', 'world')]
-    APIKeyManager(config_path="config.json", set_api_base=True)
-    results = multi_process_one(data=data, openai_model_class=Gpt35Turbo, temperature=0.7)
-    print(results)
-```
-
-This allows the API key manager to automatically rotate API keys once the per-minute limit is reached, which is
-beneficial for streamlining the management of multiple keys and ensuring uninterrupted service.
-
-`request_openai_api` and `multi_process_one` also provides handling of OpenAI request errors, including automatic retry,
-removal of keys that reach the quota, and so on.
-
-## Contributing
-
-We truly appreciate and value contributions from the community, as they play a significant role in enhancing the
-OpenAI-Parallel-Toolkit. Whether it's by reporting bugs, proposing new features, or directly contributing code, you can
-help us improve this project. Here are a few guidelines on how you can contribute:
-
-1. **Reporting Bugs**: If you encounter any bugs or issues, please open an issue in the GitHub repository detailing the
-   problem you faced. Include as much information as possible, such as the steps to reproduce the bug, the Python
-   version you're using, etc.
-
-2. **Proposing New Features**: Do you have an idea for a new feature that could improve this toolkit? Don't hesitate to
-   share it! Please open an issue in the GitHub repository describing the feature, its potential benefits, and how it
-   could be implemented.
-
-3. **Contributing Code**: We welcome pull requests. If you want to contribute code, please fork the repository, make
-   your changes, and submit a pull request. Try to keep your changes concise and ensure that the code is properly
-   formatted and documented.
-
-4. **Improving Documentation**: Good documentation is just as important as good code. If you notice that something is
-   unclear, incorrect, or missing from the documentation, please update it and submit a pull request.
-
-Before you contribute, please review the existing issues in the GitHub repository to see if someone else has already
-reported the same issue or proposed the same feature.
-
-Remember, the best way to ensure that your ideas and suggestions are implemented is by making a contribution yourself.
-Together, we can make the OpenAI-Parallel-Toolkit even better.
-
-Thank you for your interest in contributing to the OpenAI-Parallel-Toolkit!
