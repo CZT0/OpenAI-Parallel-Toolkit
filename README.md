@@ -39,43 +39,19 @@ The input and output of data are all in jsonl format.
 Input file `input.jsonl` format example:
 
 ```json lines
-{
-  "index": 0,
-  "instruction": "Translate this sentence into English",
-  "input": "Today the weather is really good"
-}
-{
-  "index": 1,
-  "instruction": "Write a sentence",
-  "input": ""
-}
-{
-  "index": 2,
-  "instruction": "Translate this sentence into English",
-  "input": "How old are you"
-}
-{
-  "index": 3,
-  "instruction": "Write a joke",
-  "input": ""
-}
+{"index": 0, "instruction": "把这句话翻译成英文", "input": "今天天气真好"}
+{"index": 1, "instruction": "写一句话", "input": ""}
+{"index": 2, "instruction": "把这句话翻译成英文", "input": "你多大了"}
+{"index": 3, "instruction": "写一个笑话", "input": ""}
 ```
 
 Output file `output.jsonl` format example:
 
 ```json lines
-{
-  "0": "The weather is really nice today."
-}
-{
-  "1": "I am trying hard to think about how to answer your question."
-}
-{
-  "2": "How old are you?"
-}
-{
-  "3": "Why pull the cow to the church? \n\n Because it is a “pastor”!"
-}
+{"0": "The weather is really nice today."}
+{"1": "我正在尽力思考如何回答你的问题。"}
+{"2": "How old are you?"}
+{"3": "为什么小明总是躲在树后笑？\n\n因为他是一个木头人！"}
 ```
 
 Python code for processing datasets:
