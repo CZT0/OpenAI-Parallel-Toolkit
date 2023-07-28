@@ -57,10 +57,7 @@ Output file `output.jsonl` format example:
 Python code for processing datasets:
 
 ```python
-from openai
-
--parallel - toolkit
-import ParallelToolkit
+from openai_parallel_toolkit import ParallelToolkit
 
 if __name__ == '__main__':
     ParallelToolkit(config_path="config.json",
