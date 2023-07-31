@@ -34,7 +34,7 @@ def filter(data: dict, path) -> dict:
     with open(path, 'r') as f:
         for line in f:
             item = json.loads(line)
-            key = int(list(item.keys())[0])
+            key = list(item.keys())[0]
             if key in data_copy:
                 del data_copy[key]
 
@@ -48,9 +48,58 @@ def read_sort_write_jsonl(path: str):
         for line in f:
             item = json.loads(line)
             data.append((int(list(item.keys())[0]), list(item.values())[0]))
-    data.sort()
+    data.sort(key=lambda x: x[0])
 
     with open(path, 'w') as f:
         for key, value in data:
-            json.dump({str(key): value}, f, ensure_ascii=False)
+            json.dump({key: value}, f, ensure_ascii=False)
             f.write('\n')
+
+
+def remove_nulls_from_jsonl(file_path):
+    if not os.path.exists(file_path):
+        return
+    non_null_data = []
+
+    # Read non-null data into a list.
+    with open(file_path, 'r') as f:
+        for line in f:
+            data = json.loads(line)
+            if any(value is None for value in data.values()):
+                continue
+            non_null_data.append(data)
+
+    # Write the non-null data back to the file.
+    with open(file_path, 'w') as f:
+        for data in non_null_data:
+            f.write(json.dumps(data, ensure_ascii=False) + '\n')
+
+
+def jsonl_to_dict_special(filename):
+    with open(filename, 'r', encoding='utf-8') as file:
+        data = {}
+        for line in file:
+            json_data = json.loads(line.strip())
+            if 'index' in json_data.keys():
+                data[json_data['index']] = json_data
+            else:
+                data.update(json_data)
+        return data
+
+
+def merge_jsonl_files(input_file, output_file, merged_file):
+    input = jsonl_to_dict_special(input_file)
+    output = jsonl_to_dict_special(output_file)
+
+    # Combine the dictionaries
+    merged = []
+    for key, value in output.items():
+        if key in input:
+            temp = input[key].copy()  # Make a copy to prevent changing the original dictionary
+            temp.update({"output": value})
+            merged.append(temp)  # Directly merge the inner objects
+
+    # Save the result to a new json file
+    with open(merged_file, 'w', encoding='utf-8') as f:
+        json.dump(merged, f, ensure_ascii=False, indent=4)
+

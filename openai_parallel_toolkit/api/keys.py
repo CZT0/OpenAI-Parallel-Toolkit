@@ -44,6 +44,7 @@ class KeyManager:
                 self.limited_keys[key] = time.time()
                 self.using_keys.discard(key)
             if unused_keys:
+                logging.info(f"{LOG_LABEL} limited_keys {len(self.limited_keys.keys())}")
                 new_key = random.choice(list(unused_keys))
                 self.using_keys.add(new_key)
                 return new_key

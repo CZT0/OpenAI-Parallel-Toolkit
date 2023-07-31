@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
         name='openai_parallel_toolkit',
-        version='1.0.0',
+        version='1.1.0',
         author='Jellow',
         author_email='dvdx@foxmail.com',
         description='OpenAI-Parallel-Toolkit is a Python library for handling multiple OpenAI API keys and parallel '
