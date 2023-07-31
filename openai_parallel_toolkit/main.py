@@ -7,7 +7,8 @@ from openai_parallel_toolkit.api.model import OpenAIModel, Prompt
 from openai_parallel_toolkit.api.request import parallel_request_openai, request_openai_api
 from openai_parallel_toolkit.utils.logger import LOG_LABEL, Logger
 from openai_parallel_toolkit.utils.process_bar import ProgressBar
-from openai_parallel_toolkit.utils.reader import filter, read_jsonl_to_dict, read_sort_write_jsonl
+from openai_parallel_toolkit.utils.reader import filter, merge_jsonl_files, read_jsonl_to_dict, read_sort_write_jsonl, \
+    remove_nulls_from_jsonl
 
 
 class ParallelToolkit:
@@ -31,6 +32,7 @@ class ParallelToolkit:
 
     def run(self):
         logging.warning(f"{LOG_LABEL}Data is being processed, waiting for the first returned result")
+        remove_nulls_from_jsonl(self.output_path)
         data = read_jsonl_to_dict(self.input_path)
         filtered_data = filter(data, self.output_path)
         if len(filtered_data) == 0:
@@ -55,3 +57,6 @@ class ParallelToolkit:
         return parallel_request_openai(data=data, openai_model=self.openai_model,
                                        key_manager=self.key_manager, threads=self.threads, max_retries=self.max_retries,
                                        process_bar=process_bar, output_path=self.output_path)
+
+    def merge(self, merged_file):
+        merge_jsonl_files(self.input_path, self.output_path, merged_file)

@@ -24,6 +24,8 @@ class TestParallelApi(unittest.TestCase):
 
 class TestRun(unittest.TestCase):
     def test_run(self):
-        ParallelToolkit(config_path="config.json",
-                        input_path="data.jsonl",
-                        output_path="output.jsonl").run()
+        tool = ParallelToolkit(config_path="config.json",
+                               input_path="data.jsonl",
+                               output_path="output.jsonl")
+        # tool.run()
+        tool.merge("merged.json")

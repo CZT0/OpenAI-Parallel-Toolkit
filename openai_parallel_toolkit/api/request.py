@@ -4,7 +4,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from functools import partial
 from threading import Lock
-from typing import Dict, Tuple
+from typing import Dict, Optional, Tuple
 
 from openai_parallel_toolkit.utils.logger import LOG_LABEL
 from openai_parallel_toolkit.utils.process_bar import ProgressBar
@@ -12,7 +12,8 @@ from .keys import KeyManager
 from .model import OpenAIModel, Prompt
 
 
-def request_openai_api(openai_model: OpenAIModel, prompt: Prompt, key_manager: KeyManager, max_retries: int):
+def request_openai_api(openai_model: OpenAIModel, prompt: Prompt, key_manager: KeyManager, max_retries: int) -> \
+        Optional[str]:
     key = key_manager.get_new_key()
     completion = None  # Initialize the completion variable
     attempts = 0  # Initialize attempts
@@ -32,7 +33,7 @@ def request_openai_api(openai_model: OpenAIModel, prompt: Prompt, key_manager: K
                 key_manager.remove_key(key)
                 key = key_manager.get_new_key()
                 continue
-            if "Limit: 3 / min" in str(e):
+            if "Limit: 3 / min" in str(e) or "Limit: 40000 / min" in str(e):
                 # If the rate limit is hit, switch the API key and try again
                 key = key_manager.get_new_key(key)
                 continue
@@ -55,8 +56,8 @@ def request_openai_api(openai_model: OpenAIModel, prompt: Prompt, key_manager: K
                     f"{max_retries}")
             attempts += 1
 
-    if completion is None:
-        raise Exception("Exceeded max retries")
+    if not completion:
+        return None
 
     output = completion['choices'][0]['message']['content'].strip()
 
