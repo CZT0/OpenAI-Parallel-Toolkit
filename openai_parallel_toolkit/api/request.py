@@ -72,7 +72,7 @@ def request_openai_api_with_tqdm(item: Tuple[int, Prompt], openai_model: OpenAIM
 
     if output_path:
         with lock:
-            with open(output_path, 'a') as file:
+            with open(output_path, 'a', encoding='utf-8') as file:
                 file.write(json.dumps({key: result}, ensure_ascii=False) + '\n')
                 file.flush()
     process_bar.update()

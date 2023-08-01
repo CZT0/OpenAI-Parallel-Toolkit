@@ -17,7 +17,7 @@ def read_config(config_path: str) -> (str, str):
 
 def read_jsonl_to_dict(jsonl_file: str) -> Dict[int, Prompt]:
     new_dict = {}
-    with open(jsonl_file, 'r') as f:
+    with open(jsonl_file, 'r', encoding='utf-8') as f:
         for line in f:
             obj = json.loads(line)
             index = obj['index']
@@ -31,7 +31,7 @@ def filter(data: dict, path) -> dict:
     if not os.path.exists(path):
         return data_copy
 
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         for line in f:
             item = json.loads(line)
             key = list(item.keys())[0]
@@ -50,7 +50,7 @@ def read_sort_write_jsonl(path: str):
             data.append((int(list(item.keys())[0]), list(item.values())[0]))
     data.sort(key=lambda x: x[0])
 
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         for key, value in data:
             json.dump({key: value}, f, ensure_ascii=False)
             f.write('\n')
@@ -62,7 +62,7 @@ def remove_nulls_from_jsonl(file_path):
     non_null_data = []
 
     # Read non-null data into a list.
-    with open(file_path, 'r') as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         for line in f:
             data = json.loads(line)
             if any(value is None for value in data.values()):
