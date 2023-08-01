@@ -90,7 +90,6 @@ def jsonl_to_dict_special(filename):
 def merge_jsonl_files(input_file, output_file, merged_file):
     input = jsonl_to_dict_special(input_file)
     output = jsonl_to_dict_special(output_file)
-
     # Combine the dictionaries
     merged = []
     for key, value in output.items():
@@ -102,4 +101,3 @@ def merge_jsonl_files(input_file, output_file, merged_file):
     # Save the result to a new json file
     with open(merged_file, 'w', encoding='utf-8') as f:
         json.dump(merged, f, ensure_ascii=False, indent=4)
-
