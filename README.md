@@ -28,11 +28,13 @@ pip install openai-parallel-toolkit
 2. 在代码中同时处理多个数据。
 3. 在代码中处理单个数据。
 
-### 1. 数据集并行处理
+### 1. 处理数据集
+
+#### 数据集格式
 
 数据的输入和输出都采用 jsonl 格式。
 
-输入文件 `input.jsonl` 格式例子：
+输入文件 `input.jsonl` 格式例子，注意index为字符串：
 
 ```json lines
 {"index": "0", "instruction": "把这句话翻译成英文", "input": "今天天气真好"}
@@ -94,7 +96,7 @@ if __name__ == '__main__':
                            output_path="output.jsonl")
     tool.merge("merged.json")
 ```
-处理数据集的 Python 代码：
+#### 处理数据集：
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit
@@ -105,7 +107,7 @@ if __name__ == '__main__':
                            output_path="output.jsonl")
     tool.run()
     # 如果你想要合并文件，可以在处理完成后调用
-    tool.merge("merged.json")
+    # tool.merge("merged.json")
 ```
 
 `ParallelToolkit` 参数：
@@ -118,7 +120,7 @@ if __name__ == '__main__':
 - `name`: 进度条名称，默认为"ParallelToolkit Progress"。
 - `openai_model`: 默认为 gpt-3.5-turbo-0613，注意 5 美元账号无法使用 gpt-4。
 
-### 2. 在代码中同时处理多个数据
+### 2. 同时处理多个数据
 
 使用 `Prompt` 命名元组构造一个 `Dict`，然后传入 `parallel_api` 方法中。
 
@@ -132,7 +134,7 @@ if __name__ == '__main__':
     print(ans)
 ```
 
-### 3. 在代码中处理单个数据
+### 3. 处理单个数据
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit, Prompt
