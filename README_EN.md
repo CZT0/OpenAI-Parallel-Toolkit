@@ -1,18 +1,21 @@
-# OpenAI Parallel Toolbox
+# OpenAI Parallel Toolkit
 
 **English** | [中文](README.md)
 
-This project leverages the key of the OpenAI $5 account. By purchasing a large number of $5 keys and combining key management and multi-threaded parallel processing of large amounts of data, it bypasses the limitation of only 3 requests per minute for a $5 account.
+This project utilizes the keys of OpenAI's $5 accounts by purchasing a large number of $5 keys and combining key management with multithreading to process large amounts of data in parallel, bypassing the limitation of only 3 requests per minute for each $5 account.
 
-The speed of parallel processing is the number of keys/20, i.e., the speed of 20 keys is 1 it/s, 40 keys is 2 it/s, and so on. Please note that each account can only request 200 times per day.
+The processing speed scales with the number of keys, with 20 keys achieving a speed of 1 it/s, 40 keys achieving 2 it/s, and so forth. Note that each account is limited to 200 requests per day.
 
-The default model is `gpt-3.5-turbo-0613`. If your context is too long, you can use the [custom model](#custom-model-and-passing-model-parameters) after running it once, specifying `gpt-3.5-turbo-16k-0613` to run again, which will continue to process the unprocessable data.
+The default model used is `gpt-3.5-turbo-0613`. If your context is too long, after running once, you can use [custom models](#custom-models-and-passing-model-parameters) and specify `gpt-3.5-turbo-16k-0613` to reprocess data that couldn't be handled initially.
+
+## Simplified Framework
+If you are looking for a simpler key management framework, check out my other open-source project [StableOpenAI](https://github.com/CZT0/StableOpenAI). This project uses an exponential backoff algorithm and read-write locks to implement thread-safe Key management efficiently and succinctly.
 
 ## Features
 
-1. ✅ Automatically rotate OpenAI API keys when usage reaches the limit, built-in error handling, and automatic retry mechanism.
-2. ✅ Provides a solution for proxy access to OpenAI services in China.
-3. ✅ Supports parallel processing of API and file operations, optimizing throughput and efficiency, supports checkpoint continuation.
+1. ✅ Automatically rotates OpenAI API keys when usage limits are reached, with built-in error handling and automatic retry mechanisms.
+2. ✅ Provides a solution for accessing OpenAI services via proxy in China.
+3. ✅ Supports parallel processing of API and file operations, optimizing throughput and efficiency, with support for resuming from breakpoints.
 
 ## Installation
 
@@ -22,17 +25,19 @@ pip install openai-parallel-toolkit
 
 ## Usage
 
-Three usage methods are currently provided:
+There are currently three ways to use this:
 
-1. Parallel processing of a dataset, supporting continued operation after interruption.
-2. Process multiple data simultaneously in the code.
-3. Process a single data item in the code.
+1. Process a dataset in parallel, supporting resumption after interruption.
+2. Handle multiple data points simultaneously in code.
+3. Handle a single data point in code.
 
-### 1. Parallel Processing of Dataset
+### 1. Processing a Dataset
 
-The input and output of the data are in jsonl format.
+#### Dataset Format
 
-Example of input file `input.jsonl` format:
+Both input and output data use the jsonl format.
+
+Input file `input.jsonl` example, note that the index is a string:
 
 ```json lines
 {"index": "0", "instruction": "Translate this sentence into English", "input": "今天天气真好"}
@@ -41,21 +46,21 @@ Example of input file `input.jsonl` format:
 {"index": "3", "instruction": "Write a joke", "input": ""}
 ```
 
-Example of output file `output.jsonl` format:
+Output file `output.jsonl` example:
 
 ```json lines
 {"0": "The weather is really nice today."}
-{"1": "I'm trying my best to think about how to answer your question."}
+{"1": "I am trying my best to think of how to answer your question."}
 {"2": "How old are you?"}
-{"3": "Why does Xiao Ming always laugh behind the tree?\n\nBecause he is a wooden man!"}
+{"3": "Why does Xiaoming always laugh behind the tree?\n\nBecause he's a wooden man!"}
 ```
-Please note, if there are problems, such as the context being too long or network issues, the data will be marked in the following format, and running it again will attempt to process this data again.
+Note, if there are issues, like overly long context or network problems, the data will be marked in the following format, and reprocessing will be attempted upon rerunning.
 ```json lines
 {"4":null}
 ```
-Merge files
+Merging Files
 
-You can merge `input.jsonl` and `output.jsonl` into a single json file for easy LLM training.
+You can merge `input.jsonl` with `output.jsonl` into a single JSON file, which is convenient for LLM training.
 ```json
 [
     {
@@ -80,11 +85,11 @@ You can merge `input.jsonl` and `output.jsonl` into a single json file for easy 
         "index": "3",
         "instruction": "Write a joke",
         "input": "",
-        "output": "Why does Xiao Ming feel pain every time he laughs?\n\nBecause he always laughs his belly sore!"
+        "output": "Why does Xiaoming always feel pain when he laughs?\n\nBecause his laughter always hurts his stomach!"
     }
 ]
 ```
-Usage:
+Invocation method:
 ```python
 from openai_parallel_toolkit import ParallelToolkit
 
@@ -94,7 +99,7 @@ if __name__ == '__main__':
                            output_path="output.jsonl")
     tool.merge("merged.json")
 ```
-Python code for processing the dataset:
+#### Processing the Dataset:
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit
@@ -104,23 +109,25 @@ if __name__ == '__main__':
                            input_path="data.jsonl",
                            output_path="output.jsonl")
     tool.run()
-    # If you want to merge files, you can call this after processing
-    tool.merge("merged.json")
+    # If you want to merge files, you can call
+
+ this after processing
+    # tool.merge("merged.json")
 ```
 
-`ParallelToolkit` parameters:
+`ParallelToolkit` Parameters:
 
 - `config_path`: Configuration file path.
 - `input_path`: Input file path.
 - `output_path`: Output file path.
 - `max_retries`: Maximum number of retries, default is 5.
-- `threads`: Number of threads, default is 20, the final number of threads will take the smaller of half the number of keys and the number of datasets.
+- `threads`: Number of threads, default is 20. The final number of threads will be the minimum of half the number of keys and the dataset size.
 - `name`: Progress bar name, default is "ParallelToolkit Progress".
-- `openai_model`: Default is gpt-3.5-turbo-0613, note that $5 accounts cannot use gpt-4.
+- `openai_model`: Default is gpt-3.5-turbo-0613. Note that the $5 account cannot use gpt-4.
 
-### 2. Process Multiple Data Simultaneously in Code
+### 2. Handling Multiple Data Points Simultaneously
 
-Construct a `Dict` using the `Prompt` named tuple, and pass it into the `parallel_api` method.
+Construct a `Dict` using the `Prompt` namedtuple, then pass it to the `parallel_api` method.
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit, Prompt
@@ -132,7 +139,7 @@ if __name__ == '__main__':
     print(ans)
 ```
 
-### 3. Process a Single Data in Code
+### 3. Handling a Single Data Point
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit, Prompt
@@ -145,30 +152,30 @@ if __name__ == '__main__':
 
 ## `config.json`
 
-The `config.json` file contains your [OpenAI API Key ↗](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) and `api_base`.
+The `config.json` file contains your [OpenAI API Keys ↗](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) and `api_base`.
 
-You can create the `config.json` file in the following way:
+You can create a `config.json` file as follows:
 
 ```json
 {
   "api_keys": [
-    "your_api_key1",
-    "your_api_key2",
-    "your_api_key3"
+    "your api key 1",
+    "your api key 2",
+    "your api key 3"
   ],
-  "api_base": "your_api_base"
+  "api_base": "your api_base"
 }
 ```
 
-In this JSON, `api_keys` is an array containing your OpenAI API keys. Please replace `"your_api_key1"`, `"your_api_key2"`, `"your_api_key3"` with your actual API keys. If you only have one API key, then the array only needs to contain one element.
+In this JSON, `api_keys` is an array containing your OpenAI API keys. Replace `"your api key 1"`, `"your api key 2"`, `"your api key 3"` with your actual API keys. If you have only one API key, then this array should contain only one element.
 
-`"api_base"` is the base URL you use to send API requests. For OpenAI, it should be set to `"https://api.openai.com/v1"`.
+`"api_base"` is the base URL you use for sending API requests. For OpenAI, it should be set to `"https://api.openai.com/v1"`.
 
-Please note that your API key is very important and should be kept safe to prevent leakage to others. You can view OpenAI's [API Key Safety Best Practices ↗](https://help.openai.com/en/articles/4936850-where
+Please note that your API key is very important and should be kept secure to prevent it from being disclosed to others. You can read more about [API Key Safety Best Practices ↗](https://help.openai.com/en/articles/4936850-where-do-i-find-my-secret-api-key) provided by OpenAI.
 
 ## Custom Models and Passing Model Parameters
 
-If you want to customize the model and parameters used, you can pass them in when initializing `ParallelToolkit`.
+If you want to customize the model and parameters used, you can pass them during the initialization of `ParallelToolkit`.
 
 ```python
 from openai_parallel_toolkit import ParallelToolkit, Prompt, OpenAIModel
@@ -182,12 +189,12 @@ if __name__ == '__main__':
 
 ## Proxy for Accessing OpenAI Services in China
 
-If you find that the progress bar does not display any progress when running the program, it may be due to network connection issues, especially in areas where accessing OpenAI services is difficult, such as China.
+If you find that the progress bar does not show any progress when running the program, it may be due to network connection issues, especially in China or other regions where accessing OpenAI services is difficult.
 
-To solve this problem, you can deploy your own proxy service and specify the URL of the proxy service in `api_base`. You can refer to the [OpenAI Proxy ↗](https://github.com/justjavac/openai-proxy) project for more information.
+To resolve this issue, you can deploy your own proxy service and specify the URL of the proxy service in `api_base`. You can refer to the [OpenAI Proxy ↗](https://github.com/justjavac/openai-proxy) project for more information.
 
-This project explains how to use Cloudflare as a proxy, offering up to 100,000 API requests per day for free. This can effectively solve network connection problems and ensure the smooth running of your program.
+This project describes how to use Cloudflare as a proxy, providing up to 100,000 API requests/day for free. This can effectively solve network connection problems and ensure your program runs smoothly.
 
-Remember, you need to replace the above link with your actual URL.
+Remember to replace the above link with your actual URL.
 
-If you don't need to specify `api_base`, you can leave it blank in the `config.json` file.
+If you do not need to specify `api_base`, you can leave it empty in the `config.json` file.
