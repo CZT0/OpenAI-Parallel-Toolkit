@@ -96,8 +96,9 @@ from openai_parallel_toolkit import ParallelToolkit
 if __name__ == '__main__':
     tool = ParallelToolkit(config_path="config.json",
                            input_path="data.jsonl",
-                           output_path="output.jsonl")
-    tool.merge("merged.json")
+                           output_path="output.jsonl") # 配置ParallelToolkit
+    tool.run() # 开始调用API，结果会写入到output_path
+    tool.merge("merged.json") # 将结果与输入合并到同一个文件
 ```
 #### 处理数据集：
 
@@ -122,6 +123,17 @@ if __name__ == '__main__':
 - `threads`: 线程数，默认为20，最后的线程数会取 key 数目的一半和数据集数目的最小值。
 - `name`: 进度条名称，默认为"ParallelToolkit Progress"。
 - `openai_model`: 默认为 gpt-3.5-turbo-0613，注意 5 美元账号无法使用 gpt-4。
+
+如果想使用其他模型，例如'gpt-4o-mini', 可以这样做：
+
+```
+model = OpenAIModel("gpt-4o-mini", temperature=0.1)
+tool = ParallelToolkit(config_path="config.json",
+                           input_path="data.jsonl",
+                           output_path="output.jsonl",
+                           openai_model=model,
+        )
+```
 
 ### 2. 同时处理多个数据
 
